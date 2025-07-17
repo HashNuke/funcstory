@@ -490,9 +490,12 @@ class FunctionTracer {
 class TraceFormatter {
   private recursiveFunctions: Set<string> = new Set();
   private includeStory: boolean;
+  private useColors: boolean;
 
   constructor(includeStory: boolean = false) {
     this.includeStory = includeStory;
+    // Detect if output is being redirected by checking if stdout is a TTY
+    this.useColors = process.stdout.isTTY;
   }
 
   format(trace: CallTrace): string {
@@ -500,6 +503,14 @@ class TraceFormatter {
     this.identifyRecursiveFunctions(trace);
     
     return this.formatTrace(trace, '');
+  }
+
+  private colorize(text: string, ansiCode: string): string {
+    return this.useColors ? `${ansiCode}${text}\x1b[0m` : text;
+  }
+
+  private gray(text: string): string {
+    return this.useColors ? `\x1b[90m${text}\x1b[0m` : text;
   }
 
   private identifyRecursiveFunctions(trace: CallTrace): void {
@@ -523,25 +534,22 @@ class TraceFormatter {
     
     // Color coding: red for recursive functions, bold for function name
     if (isPartOfRecursiveChain) {
-      result += '\x1b[31m\x1b[1m'; // Red and bold for recursive functions
+      result += this.colorize(trace.name, '\x1b[31m\x1b[1m'); // Red and bold for recursive functions
     } else {
-      result += '\x1b[1m'; // Bold for function name
+      result += this.colorize(trace.name, '\x1b[1m'); // Bold for function name
     }
-    
-    result += trace.name;
-    result += '\x1b[0m'; // Reset formatting
     
     // Add file location in VSCode-clickable format
     if (trace.fileName && trace.lineNumber) {
       const fileName = trace.fileName === 'external' ? 'external' : path.relative(process.cwd(), trace.fileName);
-      result += ` \x1b[90m(${fileName}:${trace.lineNumber})\x1b[0m`; // Gray color for location
+      result += ` ${this.gray(`(${fileName}:${trace.lineNumber})`)}`;
     }
     
     // Add symbols in priority order
     if (trace.isSkipped) {
       result += ' ⏭️';
     } else if (trace.isRecursive) {
-      result += ' \x1b[41m\x1b[97m RECURSION \x1b[0m'; // Red background, bright white text
+      result += this.useColors ? ' \x1b[41m\x1b[97m RECURSION \x1b[0m' : ' [RECURSION]';
     } else if (trace.isExternal) {
       result += ' ↗️';
     }
@@ -550,20 +558,17 @@ class TraceFormatter {
 
     // Add JSDoc description and remarks if available (in story mode)
     if (trace.jsDocDescription || trace.jsDocRemarks) {
-      result += '\x1b[90m'; // Gray color for story details
-      
       if (trace.jsDocDescription) {
-        result += trace.jsDocDescription + '\n';
+        result += this.gray(trace.jsDocDescription) + '\n';
       }
       
       if (trace.jsDocRemarks) {
         if (trace.jsDocDescription) {
           result += '\n'; // Add line break between description and remarks
         }
-        result += trace.jsDocRemarks + '\n';
+        result += this.gray(trace.jsDocRemarks) + '\n';
       }
       
-      result += '\x1b[0m'; // Reset color
       result += '\n'; // Add line break after JSDoc content
     }
     
