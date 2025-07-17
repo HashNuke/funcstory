@@ -1,0 +1,57 @@
+{
+  "name": "funcstory",
+  "version": "1.0.0",
+  "description": "Create LLM friendly reports of function calls in your typescript project",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "funcstory": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "typescript",
+    "function",
+    "tracer",
+    "analysis",
+    "ast",
+    "llm",
+    "code-analysis"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HashNuke/funcstory.git"
+  },
+  "author": "Akash Manohar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/HashNuke/funcstory/issues"
+  },
+  "homepage": "https://github.com/HashNuke/funcstory#readme",
+  "dependencies": {
+    "ts-morph": "^20.0.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.5",
+    "@types/node": "^20.6.0",
+    "@typescript-eslint/eslint-plugin": "^6.7.0",
+    "@typescript-eslint/parser": "^6.7.0",
+    "eslint": "^8.49.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.1",
+    "typescript": "^5.2.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+}
