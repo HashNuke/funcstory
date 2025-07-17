@@ -1,15 +1,14 @@
 export default {
-  preset: 'ts-jest/presets/default-esm',
-  extensionsToTreatAsEsm: ['.ts'],
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
-  moduleNameMapping: {
-    '^(\\.{1,2}/.*)\\.js$': '$1'
-  },
+  preset: 'ts-jest',
   testEnvironment: 'node',
+  transform: {
+    '^.+\\.ts$': ['ts-jest', {
+      tsconfig: {
+        module: 'commonjs',
+        target: 'ES2020'
+      }
+    }]
+  },
   testMatch: [
     '**/__tests__/**/*.test.ts'
   ],

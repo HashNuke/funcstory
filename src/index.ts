@@ -72,6 +72,42 @@ class FunctionTracer {
   }
 
   /**
+   * Check if a file has @funcstory-skip-file JSDoc comment at the top
+   */
+  private shouldSkipFile(sourceFile: any): boolean {
+    try {
+      // Get leading comments at the top of the file
+      const leadingComments = sourceFile.getLeadingCommentRanges();
+      
+      for (const comment of leadingComments) {
+        const commentText = comment.getText();
+        if (commentText && commentText.includes('@funcstory-skip-file')) {
+          return true;
+        }
+      }
+      
+      // Also check JSDoc comments on the first statement if any
+      const statements = sourceFile.getStatements();
+      if (statements.length > 0) {
+        const firstStatement = statements[0];
+        const jsDocComments = firstStatement.getJsDocs?.();
+        
+        if (jsDocComments) {
+          for (const jsDoc of jsDocComments) {
+            const fullComment = jsDoc.getFullText();
+            if (fullComment && fullComment.includes('@funcstory-skip-file')) {
+              return true;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Ignore JSDoc parsing errors
+    }
+    return false;
+  }
+
+  /**
    * Check if a function has @funcstory-skip JSDoc comment
    */
   private shouldSkipFunction(node: any): boolean {
@@ -260,6 +296,11 @@ class FunctionTracer {
   }
 
   private findFunctionDefinition(sourceFile: any, functionName: string): any | null {
+    // Check if the source file should be skipped
+    if (this.shouldSkipFile(sourceFile)) {
+      return null;
+    }
+
     // Look for function declaration
     const funcDecl = sourceFile.getFunction(functionName);
     if (funcDecl) return funcDecl;
@@ -304,6 +345,11 @@ class FunctionTracer {
   }
 
   private findMethodDefinition(sourceFile: any, className: string, methodName: string): any | null {
+    // Check if the source file should be skipped
+    if (this.shouldSkipFile(sourceFile)) {
+      return null;
+    }
+
     const classDecl = sourceFile.getClass(className);
     if (classDecl) {
       return classDecl.getMethod(methodName);
@@ -551,11 +597,34 @@ class TraceFormatter {
 
 }
 
+function showPrompt() {
+  const promptFilePath = path.join(process.cwd(), 'PROMPT.md');
+  
+  try {
+    if (fs.existsSync(promptFilePath)) {
+      const promptContent = fs.readFileSync(promptFilePath, 'utf-8');
+      console.log(promptContent);
+    } else {
+      console.log('PROMPT.md file not found in the current directory.');
+      console.log('');
+      console.log('When using FuncStory with LLMs, follow these JSDoc guidelines:');
+      console.log('');
+      console.log('The function description and remarks must be about what the function does directly - not what its descendant callees do.');
+      console.log('The activities performed by the descendants of the current function are documented on those functions.');
+      console.log('Only document direct activities a function performs.');
+    }
+  } catch (error) {
+    console.error('Error reading PROMPT.md:', error);
+    process.exit(1);
+  }
+}
+
 function showHelp() {
   console.log('FuncStory - TypeScript Function Call Reporter');
   console.log('');
   console.log('USAGE:');
   console.log('  funcstory <file-path> --entry <entry-point> [OPTIONS]');
+  console.log('  funcstory --prompt');
   console.log('');
   console.log('ARGUMENTS:');
   console.log('  <file-path>         Path to TypeScript file to analyze');
@@ -565,6 +634,7 @@ function showHelp() {
   console.log('  --scope <dir>       Directory to limit analysis scope (required)');
   console.log('  --max-depth <num>   Maximum analysis depth (default: 10)');
   console.log('  --oneline           Compact output without JSDoc descriptions (story mode is default)');
+  console.log('  --prompt            Show JSDoc writing instructions for LLMs');
   console.log('  --help, -h          Show this help message');
   console.log('');
   console.log('ENTRY POINT FORMATS:');
@@ -601,6 +671,14 @@ function showHelp() {
   console.log('   */');
   console.log('  function myFunction() { ... }');
   console.log('');
+  console.log('SKIPPING FILES:');
+  console.log('  Add JSDoc comment with @funcstory-skip-file at the top of a file:');
+  console.log('  /**');
+  console.log('   * This entire file will be skipped');
+  console.log('   * @funcstory-skip-file');
+  console.log('   */');
+  console.log('  // File contents...');
+  console.log('');
   console.log('OUTPUT FORMAT:');
   console.log('  \x1b[1mfunctionName\x1b[0m (src/file.ts:42)');
   console.log('  1. \x1b[1mfirstCall\x1b[0m (src/utils.ts:15)');
@@ -630,18 +708,24 @@ function showHelp() {
 }
 
 // CLI Interface
-function parseArgs(): TraceOptions {
+function parseArgs(): { options?: TraceOptions; exitCode: number } {
   const args = process.argv.slice(2);
+  
+  // Check for prompt flag
+  if (args.includes('--prompt')) {
+    showPrompt();
+    return { exitCode: 0 };
+  }
   
   // Check for help flag or no arguments
   if (args.length === 0 || args.includes('--help') || args.includes('-h')) {
     showHelp();
-    process.exit(0);
+    return { exitCode: 0 };
   }
   
   if (args.length < 1) {
     showHelp();
-    process.exit(1);
+    return { exitCode: 1 };
   }
 
   const options: TraceOptions = {
@@ -668,7 +752,7 @@ function parseArgs(): TraceOptions {
         console.error(`Unknown argument: ${args[i]}`);
         console.error('');
         showHelp();
-        process.exit(1);
+        return { exitCode: 1 };
     }
   }
 
@@ -676,27 +760,34 @@ function parseArgs(): TraceOptions {
     console.error('Error: --entry is required');
     console.error('');
     showHelp();
-    process.exit(1);
+    return { exitCode: 1 };
   }
 
   if (!options.scopeDirectory) {
     console.error('Error: --scope is required');
     console.error('');
     showHelp();
-    process.exit(1);
+    return { exitCode: 1 };
   }
 
   if (!fs.existsSync(options.filePath)) {
     console.error(`Error: File not found: ${options.filePath}`);
-    process.exit(1);
+    return { exitCode: 1 };
   }
 
-  return options;
+  return { options, exitCode: 0 };
 }
 
-function main() {
+export function main(): number {
   try {
-    const options = parseArgs();
+    const result = parseArgs();
+    
+    // If parseArgs returned an exit code (help, prompt, or error), return it
+    if (!result.options) {
+      return result.exitCode;
+    }
+    
+    const options = result.options;
     const tracer = new FunctionTracer(options);
     const trace = tracer.trace(options.filePath, options.entryPoint);
     
@@ -704,13 +795,16 @@ function main() {
       const formatter = new TraceFormatter(!options.oneline); // Story mode unless oneline is specified
       console.log(formatter.format(trace));
     }
+    
+    return 0;
   } catch (error: any) {
     console.error('Error:', error.message);
-    process.exit(1);
+    return 1;
   }
 }
 
-// ES module entry point check
-if (import.meta.url === `file://${process.argv[1]}`) {
-  main();
-}
+// ES module entry point check - commented out for testing
+// if (typeof import.meta !== 'undefined' && import.meta.url === `file://${process.argv[1]}`) {
+//   const exitCode = main();
+//   process.exit(exitCode);
+// }

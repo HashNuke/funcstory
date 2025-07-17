@@ -22,6 +22,7 @@ Basic syntax:
 
 ```bash
 funcstory <file-path> --entry <entry-point> --scope <directory> [OPTIONS]
+funcstory --prompt
 ```
 
 ### Arguments
@@ -34,6 +35,7 @@ funcstory <file-path> --entry <entry-point> --scope <directory> [OPTIONS]
 - `--scope <dir>` - Directory to limit analysis scope (required)
 - `--max-depth <num>` - Maximum analysis depth (default: 10)
 - `--oneline` - Compact output without JSDoc descriptions (story mode is default)
+- `--prompt` - Show JSDoc writing instructions for LLMs
 - `--help, -h` - Show help message
 
 ### Entry Point Formats
@@ -67,6 +69,12 @@ funcstory src/html-to-svg/index.ts --entry HtmlToSvgConverter.convert --scope sr
 funcstory src/utils.ts --entry processData --scope src --max-depth 5
 ```
 
+### Get JSDoc writing instructions for LLMs
+
+```bash
+funcstory --prompt
+```
+
 ## What Gets Analyzed
 
 ✅ **Included:**
@@ -80,6 +88,27 @@ funcstory src/utils.ts --entry processData --scope src --max-depth 5
 - Built-in Node.js functions
 - Functions/classes outside scope directory
 
+## Adding JSDoc Comments
+
+FuncStory uses JSDoc comments to provide descriptions in story mode. Add JSDoc comments to make your function analysis more descriptive:
+
+```typescript
+/**
+ * Processes user data and validates input
+ * 
+ * @remarks
+ * This function handles special cases like empty strings and null values.
+ * It also performs email validation and sanitization.
+ */
+function processUserData(userData: UserData): ProcessedData {
+  // Function implementation
+}
+```
+
+The description and `@remarks` will appear in the story mode output, helping explain what each function does in the call hierarchy.
+
+**Need help writing JSDoc comments?** Use `funcstory --prompt` to get detailed instructions for writing effective JSDoc comments that work well with FuncStory analysis.
+
 ## Skipping Functions
 
 Add a JSDoc comment with `@funcstory-skip` to skip analyzing a function:
@@ -89,10 +118,44 @@ Add a JSDoc comment with `@funcstory-skip` to skip analyzing a function:
  * This function will be skipped during analysis
  * @funcstory-skip
  */
-function myFunction() {
-  // This won't be analyzed
+function utilityFunction() {
+  // This won't be analyzed or included in the output
+}
+
+/**
+ * Complex logging function that we don't want in the analysis
+ * @funcstory-skip
+ */
+class Logger {
+  debug(message: string) {
+    // Implementation details not relevant to main flow
+  }
 }
 ```
+
+## Skipping Entire Files
+
+Add a JSDoc comment with `@funcstory-skip-file` at the top of a file to skip the entire file from analysis:
+
+```typescript
+/**
+ * This entire file will be skipped during analysis
+ * @funcstory-skip-file
+ */
+
+// All functions and classes in this file will be ignored
+export function utilityFunction() {
+  // This won't be analyzed
+}
+
+export class UtilityClass {
+  method() {
+    // This won't be analyzed either
+  }
+}
+```
+
+When a file is marked with `@funcstory-skip-file`, all functions and classes in that file will be treated as external calls and won't be traced further.
 
 ## Output Format
 
