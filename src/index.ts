@@ -7,7 +7,7 @@ import * as fs from 'fs';
 interface TraceOptions {
   filePath: string;
   entryPoint: string;
-  scopeDirectory?: string;
+  scopeDirectory: string;
   maxDepth?: number;
   oneline?: boolean;
 }
@@ -37,7 +37,7 @@ class FunctionTracer {
       tsConfigFilePath: path.join(process.cwd(), 'tsconfig.json'),
     });
     
-    this.scopeDirectory = options.scopeDirectory ? path.resolve(options.scopeDirectory) : path.dirname(path.resolve(options.filePath));
+    this.scopeDirectory = path.resolve(options.scopeDirectory);
     this.maxDepth = options.maxDepth || 10;
     this.includeStory = !options.oneline; // Story is default, oneline disables it
   }
@@ -562,7 +562,7 @@ function showHelp() {
   console.log('');
   console.log('OPTIONS:');
   console.log('  --entry <name>      Entry point function or method to start analysis from');
-  console.log('  --scope <dir>       Directory to limit analysis scope (optional)');
+  console.log('  --scope <dir>       Directory to limit analysis scope (required)');
   console.log('  --max-depth <num>   Maximum analysis depth (default: 10)');
   console.log('  --oneline           Compact output without JSDoc descriptions (story mode is default)');
   console.log('  --help, -h          Show this help message');
@@ -646,7 +646,8 @@ function parseArgs(): TraceOptions {
 
   const options: TraceOptions = {
     filePath: args[0],
-    entryPoint: ''
+    entryPoint: '',
+    scopeDirectory: '' // Will be validated later
   };
 
   for (let i = 1; i < args.length; i++) {
@@ -673,6 +674,13 @@ function parseArgs(): TraceOptions {
 
   if (!options.entryPoint) {
     console.error('Error: --entry is required');
+    console.error('');
+    showHelp();
+    process.exit(1);
+  }
+
+  if (!options.scopeDirectory) {
+    console.error('Error: --scope is required');
     console.error('');
     showHelp();
     process.exit(1);

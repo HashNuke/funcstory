@@ -21,7 +21,7 @@ npx funcstory
 Basic syntax:
 
 ```bash
-funcstory <file-path> --entry <entry-point> [OPTIONS]
+funcstory <file-path> --entry <entry-point> --scope <directory> [OPTIONS]
 ```
 
 ### Arguments
@@ -31,7 +31,7 @@ funcstory <file-path> --entry <entry-point> [OPTIONS]
 ### Options
 
 - `--entry <name>` - Entry point function or method to start analysis from (required)
-- `--scope <dir>` - Directory to limit analysis scope (optional)
+- `--scope <dir>` - Directory to limit analysis scope (required)
 - `--max-depth <num>` - Maximum analysis depth (default: 10)
 - `--oneline` - Compact output without JSDoc descriptions (story mode is default)
 - `--help, -h` - Show help message
@@ -160,6 +160,65 @@ FuncStory requires a `tsconfig.json` file in your project root for proper TypeSc
 - **LLM Context**: Provide structured function call context to AI tools
 - **Refactoring**: Understand dependencies before making changes
 - **Onboarding**: Help new team members understand codebase structure
+
+## Development
+
+### Setup
+
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/HashNuke/funcstory.git
+cd funcstory
+npm install
+```
+
+### Build Commands
+
+```bash
+# Build the TypeScript source to JavaScript
+npm run build
+
+# Watch mode - rebuild on file changes
+npm run dev
+
+# Run tests
+npm run test
+
+# Lint the code
+npm run lint
+
+# Clean build (TypeScript will rebuild everything)
+rm -rf dist && npm run build
+```
+
+### Testing Locally
+
+After building, you can test the package locally:
+
+```bash
+# Test with built JavaScript
+node dist/index.js <file-path> --entry <entry-point> --scope <directory>
+
+# Example
+node dist/index.js __tests__/fixtures/simple-functions.ts --entry callingFunction --scope __tests__/fixtures
+```
+
+### Project Structure
+
+```
+funcstory/
+├── src/                    # TypeScript source code
+│   └── index.ts           # Main application entry point
+├── dist/                  # Compiled JavaScript (generated)
+├── __tests__/             # Test files
+│   ├── fixtures/          # Test TypeScript files
+│   └── funcstory.test.ts  # Main test suite
+├── package.json           # Package configuration
+├── tsconfig.json          # TypeScript configuration
+├── jest.config.js         # Jest test configuration
+└── README.md              # This file
+```
 
 ## Contributing
 
