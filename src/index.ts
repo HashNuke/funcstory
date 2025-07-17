@@ -3,6 +3,7 @@
 import { Project, Node as TSNode, SyntaxKind, CallExpression } from 'ts-morph';
 import * as path from 'path';
 import * as fs from 'fs';
+import { PROMPT_CONTENT } from './prompt.js';
 
 interface TraceOptions {
   filePath: string;
@@ -603,25 +604,7 @@ class TraceFormatter {
 }
 
 function showPrompt() {
-  const promptFilePath = path.join(process.cwd(), 'PROMPT.md');
-  
-  try {
-    if (fs.existsSync(promptFilePath)) {
-      const promptContent = fs.readFileSync(promptFilePath, 'utf-8');
-      console.log(promptContent);
-    } else {
-      console.log('PROMPT.md file not found in the current directory.');
-      console.log('');
-      console.log('When using FuncStory with LLMs, follow these JSDoc guidelines:');
-      console.log('');
-      console.log('The function description and remarks must be about what the function does directly - not what its descendant callees do.');
-      console.log('The activities performed by the descendants of the current function are documented on those functions.');
-      console.log('Only document direct activities a function performs.');
-    }
-  } catch (error) {
-    console.error('Error reading PROMPT.md:', error);
-    process.exit(1);
-  }
+  console.log(PROMPT_CONTENT);
 }
 
 function showHelp() {

@@ -1,6 +1,6 @@
 {
   "name": "funcstory",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Create LLM friendly reports of function calls in your typescript project",
   "main": "dist/index.js",
   "type": "module",
