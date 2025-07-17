@@ -527,6 +527,9 @@ class TraceFormatter {
   private formatTrace(trace: CallTrace, prefix: string): string {
     let result = '';
     
+    // Always add hash prefix for every function
+    result += '# FUNCTION ';
+    
     if (prefix) {
       result += prefix + ' ';
     }

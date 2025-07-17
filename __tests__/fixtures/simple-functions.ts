@@ -30,7 +30,12 @@ export function functionThatCallsSkipped() {
   return skippedFunction();
 }
 
-// Recursive function for testing
+/**
+ * Calculates factorial of a number using recursion
+ * @remarks
+ * This is a classic recursive implementation that will demonstrate
+ * recursion detection in funcstory output.
+ */
 export function factorial(n: number): number {
   if (n <= 1) return 1;
   return n * factorial(n - 1);
