@@ -31,7 +31,8 @@ funcstory --prompt
 
 ### Options
 
-- `--entry <name>` - Entry point function or method to start analysis from (required)
+- `--entry <name>` - Starting function or method for analysis (required)
+  - **Note:** This can be any function you want to analyze
 - `--scope <dir>` - Directory to limit analysis scope (required)
 - `--max-depth <num>` - Maximum analysis depth (default: 10)
 - `--oneline` - Compact output without JSDoc descriptions (story mode is default)
@@ -50,6 +51,15 @@ funcstory --prompt
 ```bash
 funcstory src/cli.ts --entry main --scope src
 ```
+
+### Save detailed report to file (recommended for long outputs)
+
+```bash
+funcstory src/html-to-svg/index.ts --entry HtmlToSvgConverter.convert \
+  --scope src/html-to-svg > function-calls-report.md
+```
+
+**Note:** Function call reports can be very long. Redirecting the command output to a file would make it easier to review, or use the report with other tools.
 
 ### Analyze a class method with full descriptions (default)
 
