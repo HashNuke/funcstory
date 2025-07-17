@@ -1,11 +1,12 @@
 export default {
   preset: 'ts-jest',
   testEnvironment: 'node',
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   transform: {
     '^.+\\.ts$': ['ts-jest', {
       tsconfig: {
-        module: 'commonjs',
-        target: 'ES2020'
+        module: 'ES2022',
+        target: 'ES2022'
       }
     }]
   },

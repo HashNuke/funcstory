@@ -803,8 +803,4 @@ export function main(): number {
   }
 }
 
-// ES module entry point check - commented out for testing
-// if (typeof import.meta !== 'undefined' && import.meta.url === `file://${process.argv[1]}`) {
-//   const exitCode = main();
-//   process.exit(exitCode);
-// }
+// No auto-execution - keep module pure for imports and testing
